@@ -1,44 +1,64 @@
 
 import joi from 'joi';
 import nodeMailer from 'nodemailer';
+import { JSDOM } from 'jsdom';
+import createDomPurify from 'dompurify';
+import dotenv from 'dotenv';
+
+dotenv.config();
+const window = new JSDOM('').window;
+const DOMPurify = createDomPurify(window);
 
 const transit = nodeMailer.createTransport({
     service : 'Gmail',
     auth : {
-        user : 'ondiekidaystar@gmail.com',
-        pass : 'zcnp scxc hlcv pdif'
+        user : process.env.EMAIL_BRIDGE,
+        pass : process.env.APP_PASSWORD
     }
 });
 
 export const siteMail = async(req, res) => {
-    const {dropdown, subject, message, userAddress} = req.body;
+    let {dropdown, subject, message, userAddress} = req.body;
+
+    const finalData = {
+        dropdown, subject, message, userAddress
+    }
+
+    subject = DOMPurify.sanitize(subject);
+    message = DOMPurify.sanitize(message);
 
     const schema = joi.object({
         dropdown : joi.string().required(),
         subject : joi.string().required(),
-        message : joi.string().min(50).required(),
+        message : joi.string().required(),
         userAddress : joi.string().trim().email().required()
     });
-    const result = schema.validate(req.body);
+    const result = schema.validate(finalData);
     if(result.error){
         console.log(result.error.details[0].message);
         res.status(400).json({error : result.error.details[0].message});
     }
     else{
 
-        let targetEmail;
+        let targetEmail = process.env.TARGET_EMAIL;
         if(dropdown === "General"){
-            targetEmail = "egetange@eagleafrica.co.ke";
+            subject = "General Insurance: "+subject;
         }
         else if(dropdown === "Medical"){
-            targetEmail = "dmwasambo@eagleafrica.co.ke";
+            subject = "Medical Insurance: "+subject;
         }
         else if(dropdown === "Pensions"){
-            targetEmail = ""
+            subject = "Pension Administration: "+subject;
+        }
+        else if(dropdown === "Mbao"){
+            subject = "Mbao: "+subject;
+        }
+        else if(dropdown === "Group-life"){
+            subject = "Group Life: "+subject;
         }
 
     const mailOptions = {
-        from : 'ondiekidaystar@gmail.com',
+        from : process.env.EMAIL_BRIDGE,
         to : targetEmail,
         subject : subject,
         text : message,
