@@ -29,7 +29,7 @@ export const verifyCAPTCHA = async(req, res, next) => {
     }
     catch{
         res.status(500).json({
-            error : 'reCAPTCHA Validation error!'
+            error : 'Failed connection to reCAPTCHA endpoint!'
         });
     }
 }

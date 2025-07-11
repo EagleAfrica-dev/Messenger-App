@@ -18,10 +18,10 @@ const transit = nodeMailer.createTransport({
 });
 
 export const siteMail = async(req, res) => {
-    let {dropdown, subject, message, userAddress} = req.body;
+    let {dropdown, subject, message, userAddress, userPhone} = req.body;
 
     const finalData = {
-        dropdown, subject, message, userAddress
+        dropdown, subject, message, userAddress, userPhone
     }
 
     subject = DOMPurify.sanitize(subject);
@@ -31,7 +31,8 @@ export const siteMail = async(req, res) => {
         dropdown : joi.string().required(),
         subject : joi.string().required(),
         message : joi.string().required(),
-        userAddress : joi.string().trim().email().required()
+        userAddress : joi.string().trim().email().required(),
+        userPhone : joi.string().min(10).max(13).required()
     });
     const result = schema.validate(finalData);
     if(result.error){
@@ -56,6 +57,8 @@ export const siteMail = async(req, res) => {
         else if(dropdown === "Group-life"){
             subject = "Group Life: "+subject;
         }
+
+        message = "Phone Number: "+userPhone+"\n\n"+message
 
     const mailOptions = {
         from : process.env.EMAIL_BRIDGE,
